@@ -1,0 +1,28 @@
+{
+  "posts": [
+    {
+      "id": "api-p1",
+      "creatorId": "c1",
+      "creator": "Avery Rao",
+      "text": "A public project allocation was announced today.",
+      "category": "Public affairs",
+      "classification": "political claim",
+      "accountable": true,
+      "requests": [],
+      "response": null,
+      "reports": []
+    },
+    {
+      "id": "api-p2",
+      "creatorId": "c2",
+      "creator": "Maya Chen",
+      "text": "A quiet Sunday with a new roll of film.",
+      "category": "Personal",
+      "classification": "personal",
+      "accountable": false,
+      "requests": [],
+      "response": null,
+      "reports": []
+    }
+  ]
+}
