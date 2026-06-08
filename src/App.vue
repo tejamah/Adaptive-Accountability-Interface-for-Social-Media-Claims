@@ -2,26 +2,35 @@
 import { computed, ref } from 'vue'
 import {
   Bell,
+  BarChart3,
   FlaskConical,
   Home,
   RotateCcw,
   Search,
   Shield,
   UserRound,
-  UsersRound,
 } from 'lucide-vue-next'
 import AccountabilityHistory from './components/AccountabilityHistory.vue'
-import AboutResearch from './components/AboutResearch.vue'
 import ContextDrawer from './components/ContextDrawer.vue'
 import CreatorDashboard from './components/CreatorDashboard.vue'
-import ModeratorQueue from './components/ModeratorQueue.vue'
+import ExperimentStudy from './components/ExperimentStudy.vue'
 import PostCard from './components/PostCard.vue'
+import ResearchDashboard from './components/ResearchDashboard.vue'
 import RequestContextModal from './components/RequestContextModal.vue'
 import { demoUser } from './data/mockPosts'
-import { loadPosts, loadReviews, resetDemo, savePosts, saveReviews } from './services/storage'
+import {
+  loadPosts,
+  loadReviews,
+  loadStudyResponses,
+  resetDemo,
+  savePosts,
+  saveReviews,
+  saveStudyResponses,
+} from './services/storage'
 
 const posts = ref(loadPosts())
 const reviews = ref(loadReviews())
+const studyResponses = ref(loadStudyResponses())
 const activeView = ref('feed')
 const selectedPost = ref(null)
 const requestOpen = ref(false)
@@ -30,10 +39,10 @@ const toast = ref('')
 
 const views = [
   { id: 'feed', label: 'Feed', icon: Home },
+  { id: 'study', label: 'Study', icon: FlaskConical },
   { id: 'creator', label: 'Creator', icon: UserRound },
-  { id: 'history', label: 'History', icon: UsersRound },
-  { id: 'moderator', label: 'Observe', icon: Shield },
-  { id: 'about', label: 'Research', icon: FlaskConical },
+  { id: 'history', label: 'History', icon: Shield },
+  { id: 'lab', label: 'Lab', icon: BarChart3 },
 ]
 
 const viewTitle = computed(() => views.find((view) => view.id === activeView.value)?.label)
@@ -75,6 +84,12 @@ function publishResponse(postId, response) {
   showToast('Context response published')
 }
 
+function submitStudyResponse(response) {
+  studyResponses.value = [...studyResponses.value, response]
+  saveStudyResponses(studyResponses.value)
+  showToast('Study judgment recorded')
+}
+
 function reportMisuse(post) {
   post.reports ||= []
   if (!post.reports.some((report) => report.userId === demoUser.id)) {
@@ -101,6 +116,7 @@ function reset() {
   resetDemo()
   posts.value = loadPosts()
   reviews.value = loadReviews()
+  studyResponses.value = loadStudyResponses()
   activeView.value = 'feed'
   showToast('Demo data reset')
 }
@@ -149,10 +165,10 @@ function reset() {
           </section>
         </template>
 
+        <ExperimentStudy v-else-if="activeView === 'study'" :posts="posts" :responses="studyResponses" @submit="submitStudyResponse" />
         <CreatorDashboard v-else-if="activeView === 'creator'" :posts="posts" @respond="publishResponse" />
         <AccountabilityHistory v-else-if="activeView === 'history'" :posts="posts" />
-        <ModeratorQueue v-else-if="activeView === 'moderator'" :posts="posts" :reviews="reviews" @review="markReviewed" />
-        <AboutResearch v-else-if="activeView === 'about'" />
+        <ResearchDashboard v-else-if="activeView === 'lab'" :posts="posts" :study-responses="studyResponses" :reviews="reviews" @review="markReviewed" />
       </div>
 
       <nav class="safe-bottom absolute bottom-0 left-0 right-0 z-30 grid grid-cols-5 border-t border-line bg-[#0b0e13]/95 px-1 pt-2 backdrop-blur-xl">

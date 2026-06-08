@@ -84,6 +84,30 @@ Suggested evaluation measures include perceived credibility, trust judgment, sha
 
 The central design principle is that accountability remains invisible by default and becomes visible only when socially necessary. Personal and casual posts receive no accountability controls. Eligible claim types can receive private context requests; status becomes public only after the configured threshold.
 
+The prototype is positioned as **participatory accountability**, not fact-checking. Audiences initiate structured requests, creators can provide context and evidence, and the interface makes that process visible without issuing a truth verdict.
+
+The proposed evaluation protocol is documented in [docs/research-study-plan.md](docs/research-study-plan.md). It includes a controlled audience experiment, a creator-burden study, preregisterable hypotheses, outcome measures, instrumentation requirements, and an analysis plan.
+
+Feature-to-literature connections and explicit non-overclaiming boundaries are documented in [docs/literature-design-rationale.md](docs/literature-design-rationale.md).
+
+### Community Notes Data
+
+The Accountability Lab includes a de-identified aggregate snapshot generated from Community Notes public TSV exports. Raw note text and participant identifiers are not copied into the application.
+
+Regenerate the snapshot with:
+
+```bash
+python scripts/build_community_notes_metrics.py \
+  --notes path/to/notes-00000.tsv path/to/notes-00001.tsv path/to/notes-00002.tsv \
+  --status-history path/to/noteStatusHistory-00000.tsv \
+  --bat-signals path/to/batSignals-00000.tsv \
+  --ratings path/to/ratings-00001.tsv \
+  --user-enrollment path/to/userEnrollment-00000.tsv \
+  --output src/data/communityNotesMetrics.json
+```
+
+The generated metrics include authored-note reasons, status timing, request-feed signals, rating helpfulness reasons, and contributor enrollment states. They treat classifications and helpfulness as records of participation behavior, not as truth labels for posts or reputation scores for contributors.
+
 ## API Summary
 
 - `GET /api/health`
@@ -107,6 +131,7 @@ The API writes demo state to the ignored `server/data.json` file.
 
 ## Future Work
 
+- Pilot and preregister the audience experiment in `docs/research-study-plan.md`
 - Connect the Vue state layer to the Express API and PostgreSQL
 - Add consent-aware research event instrumentation
 - Test alternative thresholds and private notification strategies

@@ -5,11 +5,13 @@ import {
   Camera,
   Clapperboard,
   Heart,
+  Info,
   Landmark,
   MessageCircle,
   MoreHorizontal,
   Repeat2,
   Send,
+  ShieldAlert,
   Sparkles,
 } from 'lucide-vue-next'
 import { REQUEST_THRESHOLD } from '../data/mockPosts'
@@ -26,6 +28,15 @@ const imageIcons = { activity: Activity, camera: Camera, clapperboard: Clapperbo
 const formatCount = (count) => count >= 1000 ? `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}k` : count
 const hasRequested = () => props.post.requests.some((request) => request.userId === props.currentUserId)
 const isPublic = () => props.post.requests.length >= REQUEST_THRESHOLD
+const levelDetails = () => {
+  const levels = {
+    personal: { label: 'Personal post', detail: 'No accountability', className: 'border-line text-mist' },
+    opinion: { label: 'Opinion', detail: 'Opinion tag', className: 'border-violet/20 text-violet' },
+    'public-claim': { label: 'Public claim', detail: 'Request context', className: 'border-sky-400/20 text-sky-300' },
+    'high-impact': { label: 'High-impact claim', detail: 'Enhanced context', className: 'border-amber-400/20 text-amber-200' },
+  }
+  return levels[props.post.accountabilityLevel] || levels['public-claim']
+}
 </script>
 
 <template>
@@ -57,6 +68,14 @@ const isPublic = () => props.post.requests.length >= REQUEST_THRESHOLD
     </header>
 
     <p class="mt-3 text-[15px] leading-6 text-[#f0f1f3]">{{ post.text }}</p>
+
+    <div class="mt-3 flex items-center gap-2 text-[10px]">
+      <span class="rounded-full border px-2 py-1 font-semibold" :class="levelDetails().className">
+        {{ levelDetails().label }}
+      </span>
+      <span class="text-mist">{{ levelDetails().detail }}</span>
+      <ShieldAlert v-if="post.accountabilityLevel === 'high-impact'" :size="13" class="text-amber-200" />
+    </div>
 
     <div
       v-if="post.image"
@@ -108,14 +127,17 @@ const isPublic = () => props.post.requests.length >= REQUEST_THRESHOLD
       <button class="transition hover:text-white" aria-label="Bookmark"><Bookmark :size="18" /></button>
     </div>
 
-    <div v-if="post.accountable && !post.response" class="mt-4 flex items-center justify-between border-t border-line/70 pt-3">
+    <div v-if="post.accountable && !post.response" class="mt-4 flex items-center justify-between gap-3 border-t border-line/70 pt-3">
       <button
-        class="text-xs font-semibold transition"
-        :class="hasRequested() ? 'cursor-default text-signal' : 'text-mist hover:text-white'"
+        class="flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition"
+        :class="hasRequested()
+          ? 'cursor-default border-signal/20 bg-signal/[.06] text-signal'
+          : 'border-violet/30 bg-violet/[.06] text-violet hover:border-violet/60 hover:bg-violet/10 hover:text-white'"
         :disabled="hasRequested()"
         @click="$emit('request', post)"
       >
-        {{ hasRequested() ? 'Context request sent' : 'Request context' }}
+        <Info :size="15" />
+        {{ hasRequested() ? 'Context request sent' : 'Request Context' }}
       </button>
       <button class="text-[11px] text-mist/70 transition hover:text-mist" @click="$emit('report', post)">
         Report misuse

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { CheckCircle2, Clock3, FileCheck2, History, MessageSquareWarning, Reply } from 'lucide-vue-next'
+import { CheckCircle2, Clock3, ExternalLink, FileCheck2, History, MessageSquareWarning, Reply } from 'lucide-vue-next'
 
 const props = defineProps({
   posts: { type: Array, required: true },
@@ -14,14 +14,19 @@ const requestedPosts = computed(() => creatorPosts.value.filter((post) => post.r
 const responseRate = computed(() => requestedPosts.value.length ? Math.round((responses.value / requestedPosts.value.length) * 100) : 0)
 const unresolved = computed(() => requestedPosts.value.length - responses.value)
 const evidenceCount = computed(() => creatorPosts.value.filter((post) => post.response?.sourceLink || post.response?.evidenceNote).length)
+const claimsClarified = computed(() => creatorPosts.value.filter((post) => post.response).length)
+const sourcesProvided = computed(() => creatorPosts.value.reduce((sum, post) => sum + (post.response?.sources?.length || (post.response?.sourceLink ? 1 : 0)), 0))
+const evidenceSubmitted = computed(() => creatorPosts.value.reduce((sum, post) => sum + (post.response?.documents?.length || (post.response?.evidenceNote ? 1 : 0)), 0))
 
 const metrics = computed(() => [
   { label: 'Requests received', value: requestTotal.value, icon: MessageSquareWarning, tone: 'text-violet' },
   { label: 'Responses provided', value: responses.value, icon: Reply, tone: 'text-signal' },
   { label: 'Response rate', value: `${responseRate.value}%`, icon: CheckCircle2, tone: 'text-signal' },
   { label: 'Avg. response time', value: '5h 26m', icon: Clock3, tone: 'text-sky-400' },
-  { label: 'Unresolved posts', value: unresolved.value, icon: History, tone: 'text-amber-300' },
-  { label: 'Evidence provided', value: evidenceCount.value, icon: FileCheck2, tone: 'text-cyan-300' },
+  { label: 'Open requests', value: unresolved.value, icon: History, tone: 'text-amber-300' },
+  { label: 'Claims clarified', value: claimsClarified.value, icon: CheckCircle2, tone: 'text-signal' },
+  { label: 'Evidence submitted', value: evidenceSubmitted.value, icon: FileCheck2, tone: 'text-cyan-300' },
+  { label: 'Sources provided', value: sourcesProvided.value, icon: ExternalLink, tone: 'text-sky-300' },
 ])
 </script>
 
@@ -62,11 +67,28 @@ const metrics = computed(() => [
         <div v-for="post in requestedPosts" :key="post.id" class="mt-4 border-l pl-3" :class="post.response ? 'border-signal' : 'border-violet'">
           <div class="flex items-center gap-2">
             <span class="text-xs font-semibold" :class="post.response ? 'text-signal' : 'text-violet'">
-              {{ post.response ? 'Responded' : 'Awaiting response' }}
+              {{ post.response ? 'Responded' : 'Creator invited' }}
             </span>
             <span class="text-[10px] text-mist">· {{ post.requests.length }} requests</span>
           </div>
           <p class="mt-1 line-clamp-2 text-xs leading-5 text-mist">{{ post.text }}</p>
+        </div>
+      </div>
+
+      <div class="mt-4 rounded-2xl border border-signal/20 bg-signal/[.04] p-4">
+        <p class="text-[10px] font-semibold uppercase tracking-[.14em] text-signal">Behavioral accountability</p>
+        <div class="mt-3 flex items-end justify-between">
+          <div>
+            <p class="text-2xl font-semibold">{{ responses }} / {{ requestedPosts.length }}</p>
+            <p class="text-xs text-mist">Context requests resolved</p>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-semibold">{{ responseRate }}%</p>
+            <p class="text-xs text-mist">Response consistency</p>
+          </div>
+        </div>
+        <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-line">
+          <div class="h-full rounded-full bg-signal" :style="{ width: `${responseRate}%` }" />
         </div>
       </div>
 

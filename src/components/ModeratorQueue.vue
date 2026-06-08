@@ -26,9 +26,9 @@ const reviewedCount = computed(() => queue.value.filter((item) => props.reviews[
 <template>
   <div class="min-h-full bg-ink">
     <header class="border-b border-line bg-panel px-5 py-6">
-      <p class="text-xs font-semibold uppercase tracking-[.16em] text-sky-400">Research observer</p>
+      <p class="text-xs font-semibold uppercase tracking-[.16em] text-sky-400">Accountability Lab</p>
       <h1 class="mt-1 text-2xl font-semibold">Review queue</h1>
-      <p class="mt-2 text-sm leading-5 text-mist">Observe edge cases and potential misuse. Review does not remove or suppress content.</p>
+      <p class="mt-2 text-sm leading-5 text-mist">Review edge cases and potential misuse. Review does not remove or suppress content.</p>
       <div class="mt-5 flex gap-2">
         <span class="rounded-full bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-200">{{ queue.length - reviewedCount }} open</span>
         <span class="rounded-full bg-signal/10 px-3 py-1.5 text-xs font-medium text-signal">{{ reviewedCount }} reviewed</span>

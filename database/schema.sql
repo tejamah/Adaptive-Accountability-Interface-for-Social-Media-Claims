@@ -54,10 +54,29 @@ CREATE TABLE creator_responses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id UUID NOT NULL UNIQUE REFERENCES posts(id) ON DELETE CASCADE,
   creator_id UUID NOT NULL REFERENCES users(id),
+  response_type TEXT NOT NULL DEFAULT 'Official Source'
+    CHECK (response_type IN ('Personal Experience', 'Opinion', 'Official Source', 'Supporting Evidence', 'Correction')),
   explanation TEXT NOT NULL,
   source_url TEXT,
   evidence_note TEXT,
   label response_label,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE response_sources (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  response_id UUID NOT NULL REFERENCES creator_responses(id) ON DELETE CASCADE,
+  title TEXT,
+  source_url TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE response_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  response_id UUID NOT NULL REFERENCES creator_responses(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL,
+  storage_reference TEXT,
+  media_type TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -82,6 +101,8 @@ CREATE TABLE observer_reviews (
 
 CREATE INDEX context_requests_post_id_idx ON context_requests(post_id);
 CREATE INDEX posts_creator_id_idx ON posts(creator_id);
+CREATE INDEX response_sources_response_id_idx ON response_sources(response_id);
+CREATE INDEX response_documents_response_id_idx ON response_documents(response_id);
 CREATE INDEX misuse_reports_unreviewed_idx ON misuse_reports(created_at) WHERE reviewed_at IS NULL;
 
 CREATE VIEW public_accountability_status AS

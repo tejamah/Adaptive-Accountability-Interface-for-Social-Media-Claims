@@ -68,7 +68,15 @@ app.post('/api/posts/:postId/requests', async (request, response, next) => {
 
 app.post('/api/posts/:postId/response', async (request, response, next) => {
   try {
-    const { explanation, sourceLink = '', evidenceNote = '', label = '' } = request.body
+    const {
+      explanation,
+      responseType = '',
+      sourceLink = '',
+      sources = [],
+      documents = [],
+      evidenceNote = '',
+      label = '',
+    } = request.body
     if (!explanation?.trim()) return response.status(400).json({ error: 'An explanation is required.' })
 
     const data = await readData()
@@ -76,8 +84,11 @@ app.post('/api/posts/:postId/response', async (request, response, next) => {
     if (!post) return response.status(404).json({ error: 'Post not found.' })
 
     post.response = {
+      responseType,
       explanation: explanation.trim(),
       sourceLink,
+      sources,
+      documents,
       evidenceNote,
       label,
       createdAt: new Date().toISOString(),

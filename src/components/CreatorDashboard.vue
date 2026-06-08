@@ -1,6 +1,17 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { CheckCircle2, ChevronDown, Clock3, FileUp, Link, MessageSquareMore, Send, X } from 'lucide-vue-next'
+import {
+  CheckCircle2,
+  Clock3,
+  FilePlus2,
+  FileUp,
+  Link,
+  MessageSquareMore,
+  Plus,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-vue-next'
 
 const props = defineProps({
   posts: { type: Array, required: true },
@@ -9,7 +20,15 @@ const props = defineProps({
 
 const emit = defineEmits(['respond'])
 const activePost = ref(null)
-const form = reactive({ explanation: '', sourceLink: '', evidenceNote: '', label: 'Confirmed with source' })
+const responseTypes = ['Personal Experience', 'Opinion', 'Official Source', 'Supporting Evidence', 'Correction']
+const form = reactive({
+  responseType: 'Official Source',
+  explanation: '',
+  sources: [{ title: '', url: '' }],
+  documents: [],
+  documentName: '',
+  evidenceNote: '',
+})
 
 const creatorPosts = computed(() => props.posts.filter((post) => post.creatorId === props.creatorId))
 const pending = computed(() => creatorPosts.value.filter((post) => post.requests.length && !post.response))
@@ -29,14 +48,40 @@ function commonQuestion(post) {
 
 function openResponse(post) {
   activePost.value = post
+  form.responseType = 'Official Source'
   form.explanation = ''
-  form.sourceLink = ''
+  form.sources = [{ title: '', url: '' }]
+  form.documents = []
+  form.documentName = ''
   form.evidenceNote = ''
-  form.label = 'Confirmed with source'
+}
+
+function addSource() {
+  form.sources.push({ title: '', url: '' })
+}
+
+function removeSource(index) {
+  form.sources.splice(index, 1)
+}
+
+function addDocument() {
+  const name = form.documentName.trim()
+  if (!name) return
+  form.documents.push({ name, type: 'Supporting document' })
+  form.documentName = ''
 }
 
 function publish() {
-  emit('respond', activePost.value.id, { ...form })
+  const sources = form.sources.filter((source) => source.url.trim())
+  emit('respond', activePost.value.id, {
+    responseType: form.responseType,
+    explanation: form.explanation,
+    sources,
+    documents: [...form.documents],
+    sourceLink: sources[0]?.url || '',
+    evidenceNote: form.evidenceNote,
+    label: form.responseType,
+  })
   activePost.value = null
 }
 </script>
@@ -82,11 +127,7 @@ function publish() {
         </div>
 
         <div class="mt-4 flex flex-wrap gap-1.5">
-          <span
-            v-for="[type, count] in typeBreakdown(post)"
-            :key="type"
-            class="rounded-full border border-line px-2 py-1 text-[10px] capitalize text-mist"
-          >
+          <span v-for="[type, count] in typeBreakdown(post)" :key="type" class="rounded-full border border-line px-2 py-1 text-[10px] capitalize text-mist">
             {{ type }} · {{ count }}
           </span>
         </div>
@@ -108,9 +149,13 @@ function publish() {
         <div v-for="post in responded" :key="post.id" class="mt-3 rounded-xl border border-line bg-panel p-4">
           <div class="flex gap-3">
             <CheckCircle2 class="mt-0.5 shrink-0 text-signal" :size="18" />
-            <div>
+            <div class="min-w-0 flex-1">
               <p class="line-clamp-2 text-sm leading-5">{{ post.text }}</p>
-              <p class="mt-2 text-xs text-mist">{{ post.response.label }} · {{ post.requests.length }} requests</p>
+              <p class="mt-2 text-xs text-mist">{{ post.response.responseType || post.response.label }} · {{ post.requests.length }} requests</p>
+              <div class="mt-3 flex flex-wrap gap-2 text-[10px] text-mist">
+                <span class="rounded-full border border-line px-2 py-1">Sources attached: {{ post.response.sources?.length || (post.response.sourceLink ? 1 : 0) }}</span>
+                <span class="rounded-full border border-line px-2 py-1">Evidence attached: {{ post.response.documents?.length || (post.response.evidenceNote ? 1 : 0) }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -131,26 +176,50 @@ function publish() {
               </div>
               <p class="mt-4 rounded-xl bg-ink/50 p-3 text-sm leading-5 text-mist">{{ activePost.text }}</p>
 
-              <label class="mt-5 block text-xs font-medium text-mist">Explanation</label>
+              <fieldset class="mt-5">
+                <legend class="text-xs font-medium text-mist">Response type</legend>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                  <label
+                    v-for="type in responseTypes"
+                    :key="type"
+                    class="flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-xs transition"
+                    :class="form.responseType === type ? 'border-signal/50 bg-signal/[.06] text-white' : 'border-line text-mist'"
+                  >
+                    <input v-model="form.responseType" type="radio" :value="type" class="accent-[#b7f36b]" />
+                    {{ type }}
+                  </label>
+                </div>
+              </fieldset>
+
+              <label class="mt-5 block text-xs font-medium text-mist">Creator response</label>
               <textarea v-model="form.explanation" required rows="4" placeholder="Clarify what you meant and what is known…" class="mt-2 w-full resize-none rounded-xl border border-line bg-ink/60 p-3 text-sm outline-none focus:border-signal" />
 
-              <label class="mt-4 block text-xs font-medium text-mist"><Link class="mr-1 inline" :size="13" /> Source link</label>
-              <input v-model="form.sourceLink" type="url" placeholder="https://…" class="mt-2 w-full rounded-xl border border-line bg-ink/60 p-3 text-sm outline-none focus:border-signal" />
-
-              <label class="mt-4 block text-xs font-medium text-mist"><FileUp class="mr-1 inline" :size="13" /> Evidence note</label>
-              <textarea v-model="form.evidenceNote" rows="2" placeholder="Describe the evidence or its limits…" class="mt-2 w-full resize-none rounded-xl border border-line bg-ink/60 p-3 text-sm outline-none focus:border-signal" />
-
-              <label class="mt-4 block text-xs font-medium text-mist">Response label</label>
-              <div class="relative mt-2">
-                <select v-model="form.label" class="w-full appearance-none rounded-xl border border-line bg-ink/60 p-3 text-sm outline-none focus:border-signal">
-                  <option>Personal experience</option>
-                  <option>Opinion</option>
-                  <option>Rumor/speculation</option>
-                  <option>Confirmed with source</option>
-                  <option>Official document</option>
-                </select>
-                <ChevronDown class="pointer-events-none absolute right-3 top-3.5 text-mist" :size="16" />
+              <div class="mt-5 flex items-center justify-between">
+                <label class="text-xs font-medium text-mist"><Link class="mr-1 inline" :size="13" /> Source section</label>
+                <button type="button" class="flex items-center gap-1 text-[11px] font-semibold text-signal" @click="addSource"><Plus :size="13" /> Add source</button>
               </div>
+              <div v-for="(source, index) in form.sources" :key="index" class="mt-2 rounded-xl border border-line bg-ink/40 p-3">
+                <div class="flex gap-2">
+                  <input v-model="source.title" type="text" placeholder="Source title" class="min-w-0 flex-1 rounded-lg border border-line bg-ink/60 px-3 py-2 text-xs outline-none focus:border-signal" />
+                  <button v-if="form.sources.length > 1" type="button" class="text-mist hover:text-rose-300" @click="removeSource(index)"><Trash2 :size="15" /></button>
+                </div>
+                <input v-model="source.url" type="url" placeholder="Source URL" class="mt-2 w-full rounded-lg border border-line bg-ink/60 px-3 py-2 text-xs outline-none focus:border-signal" />
+              </div>
+
+              <label class="mt-5 block text-xs font-medium text-mist"><FileUp class="mr-1 inline" :size="13" /> Supporting document</label>
+              <div class="mt-2 flex gap-2">
+                <input v-model="form.documentName" type="text" placeholder="Document name (demo)" class="min-w-0 flex-1 rounded-xl border border-line bg-ink/60 p-3 text-xs outline-none focus:border-signal" @keyup.enter.prevent="addDocument" />
+                <button type="button" class="rounded-xl border border-line px-3 text-mist hover:text-white" @click="addDocument"><FilePlus2 :size="17" /></button>
+              </div>
+              <div v-if="form.documents.length" class="mt-2 space-y-2">
+                <div v-for="(document, index) in form.documents" :key="document.name" class="flex items-center justify-between rounded-lg bg-ink/50 px-3 py-2 text-xs">
+                  <span class="truncate">{{ document.name }}</span>
+                  <button type="button" class="text-mist hover:text-rose-300" @click="form.documents.splice(index, 1)"><X :size="14" /></button>
+                </div>
+              </div>
+
+              <label class="mt-5 block text-xs font-medium text-mist">Additional notes</label>
+              <textarea v-model="form.evidenceNote" rows="3" placeholder="Describe supporting evidence, limitations, or corrections…" class="mt-2 w-full resize-none rounded-xl border border-line bg-ink/60 p-3 text-sm outline-none focus:border-signal" />
 
               <button class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-signal py-3 text-sm font-semibold text-ink disabled:opacity-40" :disabled="!form.explanation.trim()">
                 Publish response <Send :size="15" />

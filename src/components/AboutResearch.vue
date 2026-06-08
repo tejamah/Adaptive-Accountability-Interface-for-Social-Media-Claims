@@ -31,6 +31,12 @@ const classifications = ['Personal', 'Opinion', 'Public claim', 'High-impact cla
         <p class="mt-3 text-lg font-medium leading-7">How can adaptive accountability mechanisms help audiences assess social media credibility while minimizing disruption to normal user behavior?</p>
       </section>
 
+      <section class="rounded-2xl border border-signal/20 bg-signal/[.04] p-5">
+        <p class="text-[10px] font-semibold uppercase tracking-[.15em] text-signal">HCI positioning</p>
+        <h2 class="mt-2 text-lg font-semibold">Participatory accountability</h2>
+        <p class="mt-2 text-sm leading-6 text-mist">The interface does not fact-check for audiences. It gives audiences a structured way to ask for context and gives creators a visible way to respond, making accountability a shared social process.</p>
+      </section>
+
       <section class="rounded-2xl border border-line bg-panel p-5">
         <h2 class="font-semibold">Evaluation metrics</h2>
         <div class="mt-4 grid grid-cols-2 gap-2">
